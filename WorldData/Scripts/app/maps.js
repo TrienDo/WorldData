@@ -1,94 +1,123 @@
-﻿var myGeoJSONPath = '../Data/custom.geojson';
-var myCustomStyle = {
-    stroke: false,
-    fill: true,
-    fillColor: '#fff',
-    fillOpacity: 1
+﻿var allowedCountries = {};
+var gdpInfo = null;
+$(function () {
+    getCollectingBamStatus();
+    renderMap();
+});
+
+function getCollectingBamStatus() {
+    var data = new FormData();
+    data.append("year", "2018&format=json");
+    $.ajax({
+        type: "POST",
+        url: "/Home/getGdpAllCountriesByYear",
+        data: data,
+        contentType: false,
+        processData: false,
+        success: function (result) {
+            result = JSON.parse(result);
+            if (result.status == "success") {
+                gdpInfo = result;
+            }             
+        },
+        error: function (result) {
+            alert("Error:" + result.statusText);
+        }
+    });
 }
-$.getJSON(myGeoJSONPath, function (json) {
-    var map = L.map('map').setView([39.74739, -105], 4);
-    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-        maxZoom: 18,
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors | Demo app ' +
-			'<a mailto="vantriendo@hotmail.com">&copy Trien Do</a>',
-        id: 'mapbox.streets'
-    }).addTo(map);
-    map.fitWorld();
-    
-    /*L.geoJson(json, {
-        clickable: false,
-        style: myCustomStyle
-    }).addTo(map);
-    */
-    var allowedCountries = {};
-    L.geoJson(json, {
-        clickable: true,
-        style: function (item) {
-            if (item.properties.type == 'stateline') {
-                return {
-                    fill: false,
-                    stroke: true,
-                    color: '#EAEAEA',
-                    weight: 2
-                }
-            } if (item.geometry.type == 'Point') {
-                if (item.properties.importance > 1) {
+function renderMap() {
+    var myGeoJSONPath = '../Data/custom.geojson';
+    var myCustomStyle = {
+        stroke: false,
+        fill: true,
+        fillColor: '#fff',
+        fillOpacity: 1
+    }
+    $.getJSON(myGeoJSONPath, function (json) {
+        var map = L.map('map').setView([39.74739, -105], 4);
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+            maxZoom: 18,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors | Demo app ' +
+			    '<a mailto="vantriendo@hotmail.com">&copy Trien Do</a>',
+            id: 'mapbox.streets'
+        }).addTo(map);
+        map.fitWorld();
+
+        /*L.geoJson(json, {
+            clickable: false,
+            style: myCustomStyle
+        }).addTo(map);
+        */
+        
+        L.geoJson(json, {
+            clickable: true,
+            style: function (item) {
+                if (item.properties.type == 'stateline') {
                     return {
                         fill: false,
-                        stroke: false
+                        stroke: true,
+                        color: '#EAEAEA',
+                        weight: 2
+                    }
+                } if (item.geometry.type == 'Point') {
+                    if (item.properties.importance > 1) {
+                        return {
+                            fill: false,
+                            stroke: false
+                        }
+                    }
+
+                    return {
+                        fill: true,
+                        fillOpacity: 1,
+                        stroke: false,
+                        fillColor: "#aaa",
+                        radius: 2 / item.properties.importance
+                    }
+
+                } else {
+                    return {
+                        fillColor: '#fff',
+                        fillOpacity: 0.7,
+                        fill: true,
+                        color: '#eeeeff',
+                        weight: 1
                     }
                 }
-
-                return {
-                    fill: true,
-                    fillOpacity: 1,
-                    stroke: false,
-                    fillColor: "#aaa",
-                    radius: 2 / item.properties.importance
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng)
+                    .bindLabel(feature.properties.name, {
+                        noHide: true
+                    });
+            },
+            onEachFeature: function (feature, layer) {
+                var name = feature.properties.name;
+                console.log(feature.properties.sov_a3);
+                function ctxFillColor() {
+                    return allowedCountries[name] ? '#ffddff' : '#fff';
                 }
-
-            } else {
-                return {
-                    fillColor: '#fff',
-                    fillOpacity: 0.7,
-                    fill: true,
-                    color: '#eeeeff',
-                    weight: 1
-                }
-            }
-        },
-        pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng)
-                .bindLabel(feature.properties.name, {
-                    noHide: true
+                layer.on('click', function () {
+                    allowedCountries[name] = !allowedCountries[name];
+                    console.log(allowedCountries[name])
+                    layer.setStyle({
+                        fillColor: ctxFillColor()
+                    });
                 });
-        },
-        onEachFeature: function (feature, layer) {
-            var name = feature.properties.name;
-            console.log(feature.properties.sov_a3);
-            function ctxFillColor() {
-                return allowedCountries[name] ? '#ffddff' : '#fff';
+
+                layer.on('mouseover', function () {
+                    layer.setStyle({
+                        fillColor: '#ffaaff'
+                    })
+                })
+
+                layer.on('mouseout', function () {
+                    layer.setStyle({
+                        fillColor: ctxFillColor()
+                    })
+                })
             }
-            layer.on('click', function () {
-                allowedCountries[name] = !allowedCountries[name];
-                console.log(allowedCountries[name])
-                layer.setStyle({
-                    fillColor: ctxFillColor()
-                });
-            });
+        }).addTo(map);
 
-            layer.on('mouseover', function () {
-                layer.setStyle({
-                    fillColor: '#ffaaff'
-                })
-            })
-
-            layer.on('mouseout', function () {
-                layer.setStyle({
-                    fillColor: ctxFillColor()
-                })
-            })
-        }
-    }).addTo(map);
-
-})
+    });
+}

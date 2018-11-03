@@ -17,12 +17,10 @@ namespace WorldData.RemoteWebservices
     {
         //https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structure
         public static string WORLDBANK_ROOT = ConfigurationManager.AppSettings["WorldBankEndPoint"];
-        public static string API_SAMPLE_LIST = "sampleListFile";
-        public static string API_SAMPLE_COLLECT = "collectSamples";
-        public static string API_SAMPLE_COLLECT_STATUS = "bamCollectionStatus";
-        public static string API_SAMPLE_UPLOAD = "uploadBamToNCBI";
-        public static string API_SAMPLE_UPLOAD_STATUS = "uploadBamToNCBIStatus";
-        public static string API_REFERENCE = "reference/"; 
+        public static string GDP_BY_YEAR = "countries/all/indicators/NY.GDP.PCAP.CD?page=1&per_page=265&date=";
+        public static string GDP_BY_COUNTRY = "sampleListFile";
+        public static string SUCCESS = "success";
+        public static string ERROR = "error";
         public static JObject getResource(string endpoint)
         {
             try
@@ -38,11 +36,11 @@ namespace WorldData.RemoteWebservices
                     return rs;
                 }
                 else
-                    return JObject.Parse(WorldBankWebservices.getJsonResultString("1", response.ToString()));
+                    return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.ERROR, "", response.ToString()));
             }
             catch (Exception e)
             {
-                return JObject.Parse(WorldBankWebservices.getJsonResultString("1", e.Message));
+                return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.ERROR, "", e.Message));
             }
         }
 
@@ -63,25 +61,29 @@ namespace WorldData.RemoteWebservices
                     return rs;
                 }
                 else
-                    return JObject.Parse(WorldBankWebservices.getJsonResultString("1", response.ToString()));
+                    return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.ERROR, "", response.ToString()));
             }
             catch (Exception e)
             {
-                return JObject.Parse(WorldBankWebservices.getJsonResultString("1", e.Message));
+                return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.ERROR, "", e.Message));
             }
-        } 
-    }
+        }
 
-    public static string getJsonResultString(string retCode, string value, string note = ""){
-        var keyValues = new Dictionary<string, string>
+        public static string getJsonResultString(string status, string data, string message)
         {
-            { "status", retCode},
-            { "data", value},
-            { "note", note}                    
-        };
-        var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-        serializer.MaxJsonLength = Int32.MaxValue;
-        string ret = serializer.Serialize(keyValues); 
-        return ret;
-    }
+            var keyValues = new Dictionary<string, string>
+            {
+                { "status", status.ToString()},
+                { "data", data},
+                { "message", message},                   
+            };
+            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+            serializer.MaxJsonLength = Int32.MaxValue;
+            string ret = serializer.Serialize(keyValues);
+            return ret;
+        }
+    }   
 }
+ 
+    
+ 
