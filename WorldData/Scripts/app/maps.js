@@ -1,13 +1,13 @@
 ﻿var allowedCountries = {};
-var gdpInfo = null;
+var countryGdpHash = {};
 $(function () {
-    getCollectingBamStatus();
-    renderMap();
+    getGdpInfoByYear();
+    //renderMap();
 });
 
-function getCollectingBamStatus() {
+function getGdpInfoByYear() {
     var data = new FormData();
-    data.append("year", "2018&format=json");
+    data.append("year", "2017");
     $.ajax({
         type: "POST",
         url: "/Home/getGdpAllCountriesByYear",
@@ -17,13 +17,40 @@ function getCollectingBamStatus() {
         success: function (result) {
             result = JSON.parse(result);
             if (result.status == "success") {
-                gdpInfo = result;
-            }             
+                gdpInfo = JSON.parse(result.data);
+                parseGdpInfo(gdpInfo[1]);
+            }
+            else
+                alert("Error:" + result.message);
         },
         error: function (result) {
             alert("Error:" + result.statusText);
         }
     });
+}
+var countries = "Countries";
+var gdpList = "GDP";
+var notInList = "";
+function parseGdpInfo(data) {
+    for (var i = 0 ; i < data.length; i++) {
+        var country = data[i];
+        if (country.countryiso3code != "")
+            countryGdpHash[country.countryiso3code] = country.value;
+    }
+    console.log("Size of gdp list: " + countryGdpHash.length);
+    renderMap();    
+}
+
+function getColorForCountry(country) {
+    var cColor = '#ff0000';
+    var gdp = countryGdpHash[country.properties.iso_a3];
+    if (gdp == undefined) {
+        cColor = '#ffff00';
+        notInList = notInList + "#" + country.properties.iso_a3;        
+    }
+    else if (gdp < 10000)
+        cColor = '#00ff00';
+    return cColor;
 }
 function renderMap() {
     var myGeoJSONPath = '../Data/custom.geojson';
@@ -59,7 +86,8 @@ function renderMap() {
                         color: '#EAEAEA',
                         weight: 2
                     }
-                } if (item.geometry.type == 'Point') {
+                }
+                if (item.geometry.type == 'Point') {
                     if (item.properties.importance > 1) {
                         return {
                             fill: false,
@@ -75,12 +103,14 @@ function renderMap() {
                         radius: 2 / item.properties.importance
                     }
 
-                } else {
+                }
+                else {
+                    var fillColor = getColorForCountry(item);
                     return {
-                        fillColor: '#fff',
+                        fillColor: fillColor,
                         fillOpacity: 0.7,
                         fill: true,
-                        color: '#eeeeff',
+                        color: fillColor,
                         weight: 1
                     }
                 }
@@ -93,13 +123,14 @@ function renderMap() {
             },
             onEachFeature: function (feature, layer) {
                 var name = feature.properties.name;
-                console.log(feature.properties.sov_a3);
+                var fillColor = getColorForCountry(feature);
                 function ctxFillColor() {
-                    return allowedCountries[name] ? '#ffddff' : '#fff';
+                    return allowedCountries[name] ? '#ffddff' : fillColor;
                 }
                 layer.on('click', function () {
                     allowedCountries[name] = !allowedCountries[name];
                     console.log(allowedCountries[name])
+                    console.log(notInList);
                     layer.setStyle({
                         fillColor: ctxFillColor()
                     });

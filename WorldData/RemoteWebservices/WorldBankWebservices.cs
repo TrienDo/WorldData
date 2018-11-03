@@ -17,7 +17,7 @@ namespace WorldData.RemoteWebservices
     {
         //https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structure
         public static string WORLDBANK_ROOT = ConfigurationManager.AppSettings["WorldBankEndPoint"];
-        public static string GDP_BY_YEAR = "countries/all/indicators/NY.GDP.PCAP.CD?page=1&per_page=265&date=";
+        public static string GDP_BY_YEAR = "countries/all/indicators/NY.GDP.PCAP.CD?format=json&page=1&per_page=265&date=";
         public static string GDP_BY_COUNTRY = "sampleListFile";
         public static string SUCCESS = "success";
         public static string ERROR = "error";
@@ -32,8 +32,8 @@ namespace WorldData.RemoteWebservices
                 if (response.IsSuccessStatusCode)
                 {
                     var data = response.Content.ReadAsStringAsync().Result;
-                    JObject rs = (JObject)JsonConvert.DeserializeObject(data);
-                    return rs;
+                    //Object rs = JsonConvert.DeserializeObject(data);
+                    return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.SUCCESS, data, ""));
                 }
                 else
                     return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.ERROR, "", response.ToString()));
@@ -57,8 +57,8 @@ namespace WorldData.RemoteWebservices
                 if (response.IsSuccessStatusCode)
                 {
                     var data = response.Content.ReadAsStringAsync().Result;
-                    JObject rs = (JObject)JsonConvert.DeserializeObject(data);
-                    return rs;
+                    Object rs = JsonConvert.DeserializeObject(data);
+                    return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.SUCCESS, rs,""));
                 }
                 else
                     return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.ERROR, "", response.ToString()));
@@ -69,9 +69,9 @@ namespace WorldData.RemoteWebservices
             }
         }
 
-        public static string getJsonResultString(string status, string data, string message)
+        public static string getJsonResultString(string status, Object data, string message)
         {
-            var keyValues = new Dictionary<string, string>
+            var keyValues = new Dictionary<string, Object>
             {
                 { "status", status.ToString()},
                 { "data", data},
