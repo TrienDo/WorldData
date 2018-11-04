@@ -26,7 +26,12 @@
     border-radius: 5px;
 }
 
-.info,.infoLeft h4 {
+.info h4 {
+    margin: 0 0 5px;
+    color: #0f0;
+}
+
+.infoLeft h4 {
     margin: 0 0 5px;
     color: #0f0;
 }
@@ -51,5 +56,27 @@
 .slider {    
     width: 100%;
     height: 15px;    
+    margin-left: 10px;
 }
 
+.sliderticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0px;
+}
+
+.sliderticks p {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  width: 1px;
+  background: #D3D3D3;
+  height: 10px;
+  line-height: 40px;
+  margin: 0 0 20px 0;
+}
+
+.righAlign {
+    float: right;
+}

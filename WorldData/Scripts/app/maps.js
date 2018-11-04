@@ -2,17 +2,54 @@
 var countryGdpHash = {};
 var map;
 var info;
+var intervalId = null;
+var interverPeriod = 2000;//2 seconds
+var curYear = 2017;
+
 $(function () {
     map = L.map('map');
-    getGdpInfoByYear();
+    getGdpInfoByYear(2017);
     addInfo();
     addLegend();
     addControls();
+    $("#yearRange").click(function () {
+        changeYear();
+    });
+
+    $("#animation").click(function () {
+        if (this.innerText.includes("Play"))
+            startAnimation()
+        else
+            stopAnimation();
+    });   
 });
 
-function getGdpInfoByYear() {
+function changeYear() {
+    var selYear = $("#yearRange").val();
+    $("#selectedYear").text();
+    getGdpInfoByYear(selYear);
+}
+function startAnimation() {
+    $("#animation").html('<span class="glyphicon glyphicon-stop"></span> Stop animation through years');
+    curYear = 1980;
+    intervalId = setInterval(function () {
+            $("#yearRange").val(curYear);
+            changeYear()
+            curYear++;
+            if (curYear == 2018)
+                curYear = 1980;
+        },
+        interverPeriod
+    );    
+}
+function stopAnimation() {
+    $("#animation").html('<span class="glyphicon glyphicon-play"></span> lay animation through years');
+    clearInterval(intervalId);
+}
+
+function getGdpInfoByYear(year) {
     var data = new FormData();
-    data.append("year", "2017");
+    data.append("year", year);
     $.ajax({
         type: "POST",
         url: "/Home/getGdpAllCountriesByYear",
@@ -147,12 +184,14 @@ function addControls() {
     var legend = L.control({ position: 'bottomleft' });
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'infoLeft legend');
-        var labels = [];
-        labels.push('<div class="slidecontainer"><h4>Click on a tick to select a year [1980-2017]:</h4><br/><input type="range" min="1980" max="2017" value="2017" step="1" class="slider" list="ticks" id="yearRange">');
-        labels.push('<datalist id="ticks">');
-        for(var i = 1960; i < 2018; i++)
-            labels.push('<option>' + i + '</option>');
-        labels.push('</datalist>');
+        var labels = [];        
+        labels.push('<div class="slidecontainer"><table><tr><td><h4>Click on a tick to select a year [1980-2017]: <span id="selectedYear">2017</span></h4></td>' +
+            '<td class="righAlign"><button type="button" class="btn btn-success" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button></td></tr></table><br/>'
+            + '<input type="range" min="1980" max="2017" value="2017" step="1" class="slider" id="yearRange">');
+        labels.push('<div class="sliderticks">');
+        for (var i = 1980; i < 2018; i++)
+            labels.push('<p>' + (i%100) + '</p>');
+        labels.push('</div>');
         labels.push('</div>');
         div.innerHTML = labels.join('<br>');
         return div;
