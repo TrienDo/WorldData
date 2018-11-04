@@ -146,20 +146,14 @@ function addLegend() {
 function addControls() {
     var legend = L.control({ position: 'bottomleft' });
     legend.onAdd = function (map) {
-        var div = L.DomUtil.create('div', 'info legend'),
-			grades = [0, 1000, 2000, 5000, 10000, 20000, 30000, 40000, 50000],
-			labels = [],
-			from, to;
-
-        for (var i = 0; i < grades.length; i++) {
-            from = grades[i];
-            to = grades[i + 1];
-
-            labels.push(
-				'<i style="background:' + getColorForGdp(from + 1) + '"></i> ' +
-				from + (to ? '&ndash;' + to : '+'));
-        }
-        labels.push('<i style="background:#FFFFFF"></i>No data');
+        var div = L.DomUtil.create('div', 'infoLeft legend');
+        var labels = [];
+        labels.push('<div class="slidecontainer"><h4>Click on a tick to select a year [1980-2017]:</h4><br/><input type="range" min="1980" max="2017" value="2017" step="1" class="slider" list="ticks" id="yearRange">');
+        labels.push('<datalist id="ticks">');
+        for(var i = 1960; i < 2018; i++)
+            labels.push('<option>' + i + '</option>');
+        labels.push('</datalist>');
+        labels.push('</div>');
         div.innerHTML = labels.join('<br>');
         return div;
     };
