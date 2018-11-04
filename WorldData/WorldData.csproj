@@ -182,8 +182,7 @@
     <Content Include="Scripts\app\maps.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <None Include="Data\worlddata.geo.json" />
-    <None Include="Data\custom.geojson" />
+    <None Include="Data\worlddata.geojson" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />

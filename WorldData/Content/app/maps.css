@@ -1,9 +1,37 @@
-﻿/*For google maps */
+﻿/*For maps */
 #map {
     height: calc(100vh - 50px);
     margin: 0;
     padding: 0;
     overflow: hidden;
+}
+
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    color: white;
+    background: rgba(81,80,65,0.9);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+
+.info h4 {
+    margin: 0 0 5px;
+    color: #0f0;
+}
+
+.legend {
+    text-align: left;
+    line-height: 18px;
+    color: #ffffff;
+}
+
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
 }
 
 .nicebox {
@@ -28,9 +56,9 @@
 
 #colorscheme-box {
     top: 60px;
-    left: 440px;    
+    left: 440px;
     width: 365px;
-    height: 45px;   
+    height: 45px;
     background-image: url('../UserData/legend.png');
 }
 
@@ -42,15 +70,6 @@
     display: none;
 }
 
-#census-variable {
-    width: 100px;
-    height: 20px;
-}
-
-#enzyme-variable {
-    width: 100px;
-    height: 20px;
-}
 
 #legend {
     display: flex;
@@ -104,23 +123,22 @@
     transition: opacity .2s;
 }
 
-.slider:hover {
-    opacity: 1;
-}
+    .slider:hover {
+        opacity: 1;
+    }
 
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 15px;
-    height: 15px;
-    background: #4CAF50;
-    cursor: pointer;
-}
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: #4CAF50;
+        cursor: pointer;
+    }
 
-.slider::-moz-range-thumb {
-    width: 25px;
-    height: 25px;
-    background: #4CAF50;
-    cursor: pointer;
-}
-/*End For google maps */
+    .slider::-moz-range-thumb {
+        width: 25px;
+        height: 25px;
+        background: #4CAF50;
+        cursor: pointer;
+    }

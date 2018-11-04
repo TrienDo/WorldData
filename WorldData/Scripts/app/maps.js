@@ -1,8 +1,13 @@
 ﻿var allowedCountries = {};
 var countryGdpHash = {};
-
+var map;
+var info;
 $(function () {
+    map = L.map('map');
     getGdpInfoByYear();
+    addInfo();
+    addLegend();
+    addControls();
 });
 
 function getGdpInfoByYear() {
@@ -38,20 +43,10 @@ function parseGdpInfo(data) {
     renderMap();    
 }
 
-function getColorForCountry(country) {
-    var cColor = '#ff0000';
-    var gdp = countryGdpHash[country.properties.iso_a3];
-    if (gdp == undefined) 
-        cColor = '#ffff00';
-    else if (gdp < 10000)
-        cColor = '#00ff00';
-    return cColor;
-}
 function renderMap() {
-    var myGeoJSONPath = '../Data/custom.geojson';
+    var myGeoJSONPath = '../Data/worlddata.geojson';
     
-    $.getJSON(myGeoJSONPath, function (json) {
-        var map = L.map('map');
+    $.getJSON(myGeoJSONPath, function (json) {        
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
             maxZoom: 18,
             minZoom: 2,
@@ -63,7 +58,7 @@ function renderMap() {
         L.geoJson(json, {
             clickable: true,
             style: function (item) {
-                var cColor = getColorForCountry(item);
+                var cColor = getColorForGdp(countryGdpHash[item.properties.iso_a3]);
                 return {
                     fillColor: cColor,
                     fillOpacity: 0.7,
@@ -74,31 +69,116 @@ function renderMap() {
             },           
             onEachFeature: function (feature, layer) {
                 var name = feature.properties.name;
-                var cColor = getColorForCountry(feature);
-                function ctxFillColor() {
-                    return allowedCountries[name] ? '#ffddff' : cColor;
+                var selectedBorder = 3;
+                function countryBorder() {
+                    return allowedCountries[name] ? selectedBorder : 1;
                 }
+                
+                //layer.bindPopup(name);
+
                 layer.on('click', function () {
                     allowedCountries[name] = !allowedCountries[name];
-                    console.log(allowedCountries[name])
                     layer.setStyle({
-                        fillColor: ctxFillColor()
+                        weight: countryBorder()
                     });
                 });
 
-                layer.on('mouseover', function () {
+                layer.on('mouseover', function (e) {                    
                     layer.setStyle({
-                        fillColor: '#ffaaff'
-                    })
+                        weight: selectedBorder
+                    });
+                    var gdp = countryGdpHash[feature.properties.iso_a3];
+                    info.update(name + ": " + (gdp == undefined ? "N/A" : Math.round(gdp)));
+                    //layer.openPopup(e.latlng);
                 })
 
                 layer.on('mouseout', function () {
+                    //layer.closePopup();
+                    info.update();
                     layer.setStyle({
-                        fillColor: ctxFillColor()
+                        weight: countryBorder()
                     })
                 })
             }
         }).addTo(map);
 
     });
+}
+
+function addInfo() {
+    info = L.control();
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info');
+        this.update();
+        return this._div;
+    };
+
+    info.update = function (content) {
+        this._div.innerHTML = '<h4>GDP per capita (in USD)</h4>' + (content ?
+			'<b>' + content : 'Move the mouse over a country');
+    };
+    info.addTo(map);
+}
+function addLegend() {    
+    var legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend'),
+			grades = [0, 1000, 2000, 5000, 10000, 20000, 30000, 40000, 50000],
+			labels = [],
+			from, to;
+
+        for (var i = 0; i < grades.length; i++) {
+            from = grades[i];
+            to = grades[i + 1];
+
+            labels.push(
+				'<i style="background:' + getColorForGdp(from + 1) + '"></i> ' +
+				from + (to ? '&ndash;' + to : '+'));
+        }
+        labels.push('<i style="background:#FFFFFF"></i>No data');
+        div.innerHTML = labels.join('<br>');
+        return div;
+    };
+
+    legend.addTo(map);
+}
+
+function addControls() {
+    var legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend'),
+			grades = [0, 1000, 2000, 5000, 10000, 20000, 30000, 40000, 50000],
+			labels = [],
+			from, to;
+
+        for (var i = 0; i < grades.length; i++) {
+            from = grades[i];
+            to = grades[i + 1];
+
+            labels.push(
+				'<i style="background:' + getColorForGdp(from + 1) + '"></i> ' +
+				from + (to ? '&ndash;' + to : '+'));
+        }
+        labels.push('<i style="background:#FFFFFF"></i>No data');
+        div.innerHTML = labels.join('<br>');
+        return div;
+    };
+
+    legend.addTo(map);
+}
+
+//http://www.perbang.dk/rgbgradient/ from red to green
+function getColorForGdp(gdp) {    
+    if (gdp == undefined)
+        return '#FFFFFF';
+    return gdp > 50000 ? '#00FF00' :
+           gdp > 40000 ? '#1FDF00' :
+           gdp > 30000 ? '#3FBF00' :
+           gdp > 20000 ? '#5F9F00' :
+           gdp > 10000 ? '#7F7F00' :
+           gdp > 5000  ? '#9F5F00' :
+           gdp > 2000  ? '#BF3F00' :
+           gdp > 1000  ? '#DF1F00' :
+                         '#FF0000';
+    
 }
