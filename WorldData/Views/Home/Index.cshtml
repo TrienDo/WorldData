@@ -3,27 +3,30 @@
 }
 
 <div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+    <h1>WorldData: visualising the world</h1>
+    <p>- Retrieving real data from <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structure" target="_blank">World Bank's Restful APIs</a></p>
+    <p>- Rendering geo-information from <a href="https://www.naturalearthdata.com/downloads/" target="_blank">Nature earth</a></p>
+    <p>
+        - Using tools/libraries: <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a>,
+        <a href="https://leafletjs.com/" target="_blank">Leaflet</a>,
+        <a href="https://d3js.org/" target="_blank">D3</a>
+    </p>
 </div>
 
 <div class="row">
     <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            Get data from two sources: world bank for data and geo.json from another web -> Link them to gether. Some countries have no GDP
-        </p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+        <h2>Showing GDP per capita of a year</h2>
+        <p>You can select a year to see GDP per capital of all countries in that year</p>
+        <p><a class="btn btn-primary" href="~/Home/Maps">Take me there</a></p>
     </div>
     <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
+        <h2>Animating the changes of GDP per capital over years</h2>
+        <p>Click 'Play animation through years' to see how GDP per capital of the world changes over years</p>
+        <p><a class="btn btn-primary" href="~/Home/Maps">Take me there</a></p>
     </div>
     <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
+        <h2>Comparing GDP per capital of selected countries</h2>
+        <p>You can click to select or de-select a country on the map the click "Compare selected countries' to view a chart</p>
+        <p><a class="btn btn-primary" href="~/Home/Maps">Take me there</a></p>
     </div>
 </div>

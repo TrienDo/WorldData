@@ -65,14 +65,15 @@ function stopAnimation() {
 }
 
 function getGdpForSelectedCountries() {
-    var selContries = [];
+    //Get selected country codes
+    var selCountries = [];
     Object.keys(selectedCountries).forEach(function (key) {
         if (selectedCountries[key])
-            selContries.push(key);
+            selCountries.push(key);
     });
-    
+    //Call api from controller
     var data = new FormData();
-    data.append("countryList", selContries.join(';'));
+    data.append("countryList", selCountries.join(';'));
     $.ajax({
         type: "POST",
         url: "/Home/getGdpForCountries",
@@ -94,13 +95,24 @@ function getGdpForSelectedCountries() {
     });
 }
 
-//http://bl.ocks.org/asielen/44ffca2877d0132572cb
+/*
+ *  Tutorial on chart but need customising  http://bl.ocks.org/asielen/44ffca2877d0132572cb
+ */
 function compareSelectedCountries(jsonData) {
+    /*Create a footprint for all data entry = hashmap of 
+        key = year
+        value = Array of Countries 
+        [{
+            code: countryCode,
+            gdp: gdp            
+        }]
+    */
     var data = {};
     for (var year = startYear; year < curYear; year++) {
         data[year] = [];
     }
-    //Parse data for each country
+
+    //Fill the hashmap with data: year: {Country1,Country2}
     jsonData.forEach(function (d) {
         if (data[parseInt(d.date)] != undefined)
             data[parseInt(d.date)].push({
@@ -108,30 +120,34 @@ function compareSelectedCountries(jsonData) {
                 "gdp": d.value
             })
     });
-    //Calculate size
-    var elementId = "#countriesChart";
+
+    //Calculate size for the chart
+    var elementId = "#countriesChart"; //id of the div tag where the chart will be rendered 
     $(".modal .modal-dialog").width($(document).width() - 50);
     var w = $(".modal .modal-dialog").width() - 50;
     var h = 500;   
     $("#countriesChart").html("");
-    $("#dialogtitle").html("Comparing GDP Per Capita from " + startYear);
+    $("#dialogtitle").html("COMPARING GDP PER CAPITA OF SELECTED COUNTRIES FROM " + startYear + " (Hover to see exact values)");
     $("#modelVisualisation").modal("show");
-    // format the data
+
+    //Format the data to pass into the chart
+    //Array of object {year:1999,CountryCode1:gdp1,ContryCode2:gdp2}
     var pointInfo = [];
     for (var year = startYear; year < curYear; year++) {
         var yearInfo = data[year];
         var dataItem = {};
         dataItem["year"] = year;
         yearInfo.forEach(function (d) {
-            console.log(d.gdp);
             if (d.gdp == undefined)
                 d.gdp = 0;
             dataItem[d.code] = parseInt(d.gdp);
         });        
         pointInfo.push(dataItem)
     }
-    var template = pointInfo[0];
-    
+
+    //Get a template to create legends for lines of the chart
+    //A hashmap of {CoundtryCode1: {'column':CoundtryCode1}}, {CoundtryCode2: {'column':CoundtryCode2}}
+    var template = pointInfo[0];    
     var cLegend = {};
     Object.keys(template).forEach(function (key) {
             if(key != 'year')
@@ -139,13 +155,13 @@ function compareSelectedCountries(jsonData) {
         }
     );
     
-    //bind to chart
-
-    var chart = makeLineChart(pointInfo, 'year', cLegend, {xAxis: 'Years', yAxis: 'GDP per capita in USD'}, w, h);
+    //bind to the chart and render it
+    var chart = makeLineChart(pointInfo, 'year', cLegend, { xAxis: 'YEARS', yAxis: 'GDP PER CAPITA in USD' }, w, h);
     chart.bind(elementId);    
     chart.render();
 }
 
+//Call api from controller to get GDP of all countries by selected year
 function getGdpInfoByYear(year) {
     var data = new FormData();
     data.append("year", year);
@@ -170,6 +186,7 @@ function getGdpInfoByYear(year) {
     });
 }
 
+//Create a hashmap of countryCode: GDP so can match with countryCode when rendering regions
 function parseGdpInfo(data) {
     for (var i = 0 ; i < data.length; i++) {
         var country = data[i];
@@ -256,11 +273,12 @@ function addInfoPanel() {
     };
 
     infoPanel.update = function (content) {
-        this._div.innerHTML = '<h4>GDP per capita (in USD)</h4>' + (content ?
-			'<b>' + content : 'Move the mouse over a country');
+        this._div.innerHTML = '<h4>GDP PER CAPITA in USD</h4>' + (content ?
+			'<b>' + content : 'Move the mouse over a country to see GDP <br/>Click to de/select countries to compare');
     };
     infoPanel.addTo(map);
 }
+
 function addLegend() {    
     var legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
@@ -281,7 +299,6 @@ function addLegend() {
         div.innerHTML = labels.join('<br>');
         return div;
     };
-
     legend.addTo(map);
 }
 
@@ -302,11 +319,13 @@ function addControls() {
         div.innerHTML = labels.join('<br>');
         return div;
     };
-
     legend.addTo(map);
 }
 
-//http://www.perbang.dk/rgbgradient/ from red to green
+/*
+ * Tool to generate gradians http://www.perbang.dk/rgbgradient/ from red to green
+ */
+
 function getColorForGdp(gdp) {    
     if (gdp == undefined)
         return '#FFFFFF';
