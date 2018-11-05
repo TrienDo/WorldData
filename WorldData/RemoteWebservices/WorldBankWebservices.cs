@@ -13,14 +13,22 @@ using System.Diagnostics;
 
 namespace WorldData.RemoteWebservices
 {
+    /*
+     * This class enables controllers connect to WorldBank's RESTFUL API webservices
+     */
+
     public class WorldBankWebservices
     {
-        //https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structure
+        /*
+         * WorldBank's APIs tutorial: https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structure
+         */
         public static string WORLDBANK_ROOT = ConfigurationManager.AppSettings["WorldBankEndPoint"];
         public static string GDP_BY_YEAR = "countries/all/indicators/NY.GDP.PCAP.CD?format=json&page=1&per_page=265&date=";
-        public static string GDP_BY_COUNTRY = "countries/###/indicators/NY.GDP.PCAP.CD?format=json&page=1&per_page=265";//Max 5 countries * 45
+        public static string GDP_BY_COUNTRY = "countries/###/indicators/NY.GDP.PCAP.CD?format=json&page=1&per_page=20000";
         public static string SUCCESS = "success";
         public static string ERROR = "error";
+
+        //Call get method
         public static JObject getResource(string endpoint)
         {
             try
@@ -32,7 +40,6 @@ namespace WorldData.RemoteWebservices
                 if (response.IsSuccessStatusCode)
                 {
                     var data = response.Content.ReadAsStringAsync().Result;
-                    //Object rs = JsonConvert.DeserializeObject(data);
                     return JObject.Parse(WorldBankWebservices.getJsonResultString(WorldBankWebservices.SUCCESS, data, ""));
                 }
                 else
@@ -44,6 +51,7 @@ namespace WorldData.RemoteWebservices
             }
         }
 
+        //Call post method
         public static JObject postResource(string endpoint, string jsonString)
         {
             try
@@ -52,7 +60,6 @@ namespace WorldData.RemoteWebservices
                 var client = new HttpClient();
                 client.BaseAddress = new Uri(WORLDBANK_ROOT);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.Timeout = new TimeSpan(0, 45, 30);//0 hours, 45 minutes, 30 seconds
                 HttpResponseMessage response = client.PostAsync(endpoint, jsonData).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -69,6 +76,7 @@ namespace WorldData.RemoteWebservices
             }
         }
 
+        //Form consitent format for responses
         public static string getJsonResultString(string status, Object data, string message)
         {
             var keyValues = new Dictionary<string, Object>
@@ -84,6 +92,3 @@ namespace WorldData.RemoteWebservices
         }
     }   
 }
- 
-    
- 

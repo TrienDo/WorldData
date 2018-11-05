@@ -1,8 +1,10 @@
-﻿.chart-wrapper {
+﻿/*
+    For milti-series chart
+*/
+.chart-wrapper {
     max-width: 950px;
     min-width: 304px;
     margin: 0 auto;
-    //background-color: #FAF7F7;
     background-color: #FFFFFF;
 }
 

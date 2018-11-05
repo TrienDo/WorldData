@@ -19,6 +19,7 @@ namespace WorldData.Controllers
             ViewBag.Message = "This maps presents the world's data.";
             return View();
         }
+
         [HttpPost]
         public JObject getGdpAllCountriesByYear(string year)
         {

@@ -1,24 +1,30 @@
-﻿var selectedCountries = {};
-var countryGdpHash = {};
-var map;
-var jsonCountries;
-var countriesFeatureLayer;
-var info;
-var intervalId = null;
-var interverPeriod = 2000;//2 seconds
-var curYear = 2017;
+﻿var selectedCountries = {}; //Hash map: Country Codes of selected countries for comparison
+var countryGdpHash = {};    //Hash map: Country Code - GDP
+var map;                    //Map
+var jsonCountries;          //Json data about boundaries of countries loaded from geojson file
+var countriesFeatureLayer;  //Layers of country rendering --> So map can removing them when render new GDP data 
+var infoPanel;              //The top right panel to show GDP PC of the hovered country 
+var intervalId = null;      //id of the inteval animation --> So can stop them later
+var interverPeriod = 2000;  //2 seconds per year for animation --> Can let user specify this later
+var curYear = 2018;         //Data range to the latest year --> Can dynamic get from the current date
+var startYear = 1980;       //World bank provide data from 1968? but only use data from 1980 in this app
+var animatedYear = startYear;//Record the current year the animation is rendering
 
+//Initiate the page
 $(function () {
     map = L.map('map');
     renderMap();
-    getGdpInfoByYear(2017);
-    addInfo();
+    getGdpInfoByYear(curYear-1);
+    addInfoPanel();
     addLegend();
     addControls();
+
+    //When the user select a year -> Update map
     $("#yearRange").click(function () {
         changeYear();
     });
 
+    //Start/Stop animation
     $("#animation").click(function () {
         if (this.innerText.includes("Play"))
             startAnimation()
@@ -26,10 +32,37 @@ $(function () {
             stopAnimation();
     });
 
+    //Compare GDP of selected countries
     $("#compare").click(function () {
         getGdpForSelectedCountries();        
     });
 });
+
+//When the user select a year -> Update map
+function changeYear() {
+    var selYear = $("#yearRange").val();
+    $("#selectedYear").text(selYear);
+    getGdpInfoByYear(selYear);
+}
+
+function startAnimation() {
+    $("#animation").html('<span class="glyphicon glyphicon-stop"></span> Stop animation through years');
+    animatedYear = startYear;
+    intervalId = setInterval(function () {
+            $("#yearRange").val(animatedYear);
+            changeYear();
+            animatedYear++;
+            if (animatedYear == curYear)
+                animatedYear = startYear;
+        },
+        interverPeriod
+    );
+}
+
+function stopAnimation() {
+    $("#animation").html('<span class="glyphicon glyphicon-play"></span> Play animation through years');
+    clearInterval(intervalId);
+}
 
 function getGdpForSelectedCountries() {
     var selContries = [];
@@ -64,8 +97,7 @@ function getGdpForSelectedCountries() {
 //http://bl.ocks.org/asielen/44ffca2877d0132572cb
 function compareSelectedCountries(jsonData) {
     var data = {};
-    var startYear = 1970;
-    for (var year = startYear; year < 2018; year++) {
+    for (var year = startYear; year < curYear; year++) {
         data[year] = [];
     }
     //Parse data for each country
@@ -85,8 +117,8 @@ function compareSelectedCountries(jsonData) {
     $("#dialogtitle").html("Comparing GDP Per Capita from " + startYear);
     $("#modelVisualisation").modal("show");
     // format the data
-    var info = [];
-    for (var year = startYear; year < 2018; year++) {
+    var pointInfo = [];
+    for (var year = startYear; year < curYear; year++) {
         var yearInfo = data[year];
         var dataItem = {};
         dataItem["year"] = year;
@@ -96,9 +128,9 @@ function compareSelectedCountries(jsonData) {
                 d.gdp = 0;
             dataItem[d.code] = parseInt(d.gdp);
         });        
-        info.push(dataItem)
+        pointInfo.push(dataItem)
     }
-    var template = info[0];
+    var template = pointInfo[0];
     
     var cLegend = {};
     Object.keys(template).forEach(function (key) {
@@ -109,31 +141,9 @@ function compareSelectedCountries(jsonData) {
     
     //bind to chart
 
-    var chart = makeLineChart(info, 'year', cLegend, {xAxis: 'Years', yAxis: 'GDP per capita in USD'}, w, h);
+    var chart = makeLineChart(pointInfo, 'year', cLegend, {xAxis: 'Years', yAxis: 'GDP per capita in USD'}, w, h);
     chart.bind(elementId);    
     chart.render();
-}
-function changeYear() {
-    var selYear = $("#yearRange").val();
-    $("#selectedYear").text(selYear);
-    getGdpInfoByYear(selYear);
-}
-function startAnimation() {
-    $("#animation").html('<span class="glyphicon glyphicon-stop"></span> Stop animation through years');
-    curYear = 1980;
-    intervalId = setInterval(function () {
-            $("#yearRange").val(curYear);
-            changeYear();
-            curYear++;
-            if (curYear == 2018)
-                curYear = 1980;
-        },
-        interverPeriod
-    );    
-}
-function stopAnimation() {
-    $("#animation").html('<span class="glyphicon glyphicon-play"></span> Play animation through years');
-    clearInterval(intervalId);
 }
 
 function getGdpInfoByYear(year) {
@@ -223,11 +233,11 @@ function renderCountries() {
                     weight: selectedBorder
                 });
                 var gdp = countryGdpHash[feature.properties.iso_a3];
-                info.update(feature.properties.name + ": " + (gdp == undefined ? "N/A" : Math.round(gdp)));
+                infoPanel.update(feature.properties.name + ": " + (gdp == undefined ? "N/A" : Math.round(gdp)));
             })
 
             layer.on('mouseout', function () {
-                info.update();
+                infoPanel.update();
                 layer.setStyle({
                     weight: countryBorderWidth()
                 })
@@ -237,19 +247,19 @@ function renderCountries() {
     countriesFeatureLayer.addTo(map);
 }
 
-function addInfo() {
-    info = L.control();
-    info.onAdd = function (map) {
+function addInfoPanel() {
+    infoPanel = L.control();
+    infoPanel.onAdd = function (map) {
         this._div = L.DomUtil.create('div', 'info');
         this.update();
         return this._div;
     };
 
-    info.update = function (content) {
+    infoPanel.update = function (content) {
         this._div.innerHTML = '<h4>GDP per capita (in USD)</h4>' + (content ?
 			'<b>' + content : 'Move the mouse over a country');
     };
-    info.addTo(map);
+    infoPanel.addTo(map);
 }
 function addLegend() {    
     var legend = L.control({ position: 'bottomright' });
@@ -280,12 +290,12 @@ function addControls() {
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'infoLeft mapLegend');
         var labels = [];        
-        labels.push('<div class="slidecontainer"><table width="100%"><tr><td><h4>Click on a tick to select a year [1980-2017]: <span id="selectedYear">2017</span></h4></td>' +
+        labels.push('<div class="slidecontainer"><table width="100%"><tr><td><h4>Click on a tick to select a year [' + startYear + '-' + (curYear - 1) + ']: <span id="selectedYear">' + (curYear - 1) + '</span></h4></td>' +
             '<td><button type="button" class="btn btn-primary righAlign" id="compare"> <span class="glyphicon glyphicon-signal"></span> Compare selected countries</button>'
             + '<button type="button" class="btn btn-primary righAlign" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button></td></tr></table><br/>'
-            + '<input type="range" min="1980" max="2017" value="2017" step="1" class="slider" id="yearRange">');
+            + '<input type="range" min="' + startYear + '" max="' + (curYear - 1) + '" value="' + (curYear - 1) + '" step="1" class="slider" id="yearRange">');
         labels.push('<div class="sliderticks">');
-        for (var i = 1980; i < 2018; i++)
+        for (var i = startYear; i < curYear; i++)
             labels.push('<p>' + (i%100) + '</p>');
         labels.push('</div>');
         labels.push('</div>');
