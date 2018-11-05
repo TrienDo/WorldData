@@ -1,15 +1,30 @@
 ﻿<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.css" />
 <link rel="stylesheet" type="text/css" href="~/Content/app/maps.css">
+<link rel="stylesheet" type="text/css" href="~/Content/app/multiline.css">
 @{
     ViewBag.Title = "Maps visualising data from World Bank";
 }
 </div>
-
-
 <div id="map"></div>
-@section scripts {
-    <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
-    <script src="~/Scripts/app/maps.js"></script>
-}
 
- 
+<div id="modelVisualisation" class="modal fade" role="dialog">
+    <div class="modal-dialog model-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 id="dialogtitle" class="modal-title">Modal Header</h4>
+            </div>
+            <div class="chart-wrapper" id="countriesChart"></div>
+        </div>
+    </div>
+</div>
+    
+    @section scripts {
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
+        <script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+        <script src="~/Scripts/app/maps.js"></script>
+        <script src="~/Scripts/app/multiline.js"></script>
+    }
+
+

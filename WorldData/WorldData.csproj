@@ -173,6 +173,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\app\maps.css" />
+    <Content Include="Content\app\multiline.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="favicon.ico" />
@@ -180,6 +181,7 @@
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\app\maps.js" />
+    <Content Include="Scripts\app\multiline.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Data\worlddata.geojson" />

@@ -25,6 +25,12 @@ namespace WorldData.Controllers
             return WorldBankWebservices.getResource(WorldBankWebservices.GDP_BY_YEAR + year);
         }
 
+        [HttpPost]
+        public JObject getGdpForCountries(string countryList)
+        {
+            return WorldBankWebservices.getResource(WorldBankWebservices.GDP_BY_COUNTRY.Replace("###",countryList));
+        }
+
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";

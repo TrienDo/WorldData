@@ -36,13 +36,13 @@
     color: #0f0;
 }
 
-.legend {
+.mapLegend {
     text-align: left;
     line-height: 18px;
     color: #ffffff;
 }
 
-.legend i {
+.mapLegend i {
     width: 18px;
     height: 18px;
     float: left;
@@ -79,4 +79,9 @@
 
 .righAlign {
     float: right;
+}
+
+.modal .modal-dialog {     
+    /*width: calc(80% - 50px);*/
+    width:1450px;
 }

@@ -27,15 +27,92 @@ $(function () {
     });
 
     $("#compare").click(function () {
-        var selContries = [];
-        Object.keys(allowedCountries).forEach(function (key) {
-            if (allowedCountries[key])
-                selContries.push(key);
-        });
-        alert(selContries.join(','));
+        getGdpForSelectedCountries();        
     });
 });
 
+function getGdpForSelectedCountries() {
+    var selContries = [];
+    Object.keys(allowedCountries).forEach(function (key) {
+        if (allowedCountries[key])
+            selContries.push(key);
+    });
+    
+    var data = new FormData();
+    data.append("countryList", selContries.join(';'));
+    $.ajax({
+        type: "POST",
+        url: "/Home/getGdpForCountries",
+        data: data,
+        contentType: false,
+        processData: false,
+        success: function (result) {
+            result = JSON.parse(result);
+            if (result.status == "success") {
+                gdpInfo = JSON.parse(result.data);
+                compareSelectedCountries(gdpInfo[1]);
+            }
+            else
+                alert("Error:" + result.message);
+        },
+        error: function (result) {
+            alert("Error:" + result.statusText);
+        }
+    });
+}
+
+//http://bl.ocks.org/asielen/44ffca2877d0132572cb
+function compareSelectedCountries(jsonData) {
+    var data = {};
+    var startYear = 1970;
+    for (var year = startYear; year < 2018; year++) {
+        data[year] = [];
+    }
+    //Parse data for each country
+    jsonData.forEach(function (d) {
+        if (data[parseInt(d.date)] != undefined)
+            data[parseInt(d.date)].push({
+                "code": d.countryiso3code,
+                "gdp": d.value
+            })
+    });
+    //Calculate size
+    var elementId = "#countriesChart";
+    $(".modal .modal-dialog").width($(document).width() - 50);
+    var w = $(".modal .modal-dialog").width() - 50;
+    var h = 500;   
+    $("#countriesChart").html("");
+    $("#dialogtitle").html("Comparing GDP Per Capita from " + startYear);
+    $("#modelVisualisation").modal("show");
+    // format the data
+    var info = [];
+    for (var year = startYear; year < 2018; year++) {
+        var yearInfo = data[year];
+        var dataItem = {};
+        dataItem["year"] = year;
+        yearInfo.forEach(function (d) {
+            console.log(d.gdp);
+            if (d.gdp == undefined)
+                d.gdp = 0;
+            dataItem[d.code] = parseInt(d.gdp);
+        });        
+        info.push(dataItem)
+    }
+    var template = info[0];
+    
+    var cLegend = {};
+    Object.keys(template).forEach(function (key) {
+            if(key != 'year')
+                cLegend[key] = {'column': key}
+        }
+    );
+    
+    //bind to chart
+
+    var chart = makeLineChart(info, 'year', cLegend, {xAxis: 'Years', yAxis: 'GDP per capita in USD'}, w, h);
+    chart.bind(elementId);    
+    chart.render();
+}
 function changeYear() {
     var selYear = $("#yearRange").val();
     $("#selectedYear").text();
@@ -177,7 +254,7 @@ function addInfo() {
 function addLegend() {    
     var legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
-        var div = L.DomUtil.create('div', 'info legend'),
+        var div = L.DomUtil.create('div', 'info mapLegend'),
 			grades = [0, 1000, 2000, 5000, 10000, 20000, 30000, 40000, 50000],
 			labels = [],
 			from, to;
@@ -201,7 +278,7 @@ function addLegend() {
 function addControls() {
     var legend = L.control({ position: 'bottomleft' });
     legend.onAdd = function (map) {
-        var div = L.DomUtil.create('div', 'infoLeft legend');
+        var div = L.DomUtil.create('div', 'infoLeft mapLegend');
         var labels = [];        
         labels.push('<div class="slidecontainer"><table><tr><td><h4>Click on a tick to select a year [1980-2017]: <span id="selectedYear">2017</span></h4></td>' +
             '<td class="righAlign"><button type="button" class="btn btn-success" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button>'

@@ -18,7 +18,7 @@ namespace WorldData.RemoteWebservices
         //https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structure
         public static string WORLDBANK_ROOT = ConfigurationManager.AppSettings["WorldBankEndPoint"];
         public static string GDP_BY_YEAR = "countries/all/indicators/NY.GDP.PCAP.CD?format=json&page=1&per_page=265&date=";
-        public static string GDP_BY_COUNTRY = "sampleListFile";
+        public static string GDP_BY_COUNTRY = "countries/###/indicators/NY.GDP.PCAP.CD?format=json&page=1&per_page=265";//Max 5 countries * 45
         public static string SUCCESS = "success";
         public static string ERROR = "error";
         public static JObject getResource(string endpoint)
