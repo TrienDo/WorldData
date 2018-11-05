@@ -17,7 +17,7 @@
 }
 
 .infoLeft {
-    padding: 10px 8px;
+    padding: 10px 0px 0px 5px;
     margin-bottom:25px !important;
     font: 14px/16px Arial, Helvetica, sans-serif;
     color: white;
@@ -32,7 +32,7 @@
 }
 
 .infoLeft h4 {
-    margin: 0 0 5px;
+    margin: 10px 0px 0px 10px;
     color: #0f0;
 }
 
@@ -79,6 +79,7 @@
 
 .righAlign {
     float: right;
+    margin-right:10px;
 }
 
 .modal .modal-dialog {     

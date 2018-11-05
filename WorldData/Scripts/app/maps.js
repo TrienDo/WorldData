@@ -1,4 +1,4 @@
-﻿var allowedCountries = {};
+﻿var selectedCountries = {};
 var countryGdpHash = {};
 var map;
 var jsonCountries;
@@ -33,8 +33,8 @@ $(function () {
 
 function getGdpForSelectedCountries() {
     var selContries = [];
-    Object.keys(allowedCountries).forEach(function (key) {
-        if (allowedCountries[key])
+    Object.keys(selectedCountries).forEach(function (key) {
+        if (selectedCountries[key])
             selContries.push(key);
     });
     
@@ -115,7 +115,7 @@ function compareSelectedCountries(jsonData) {
 }
 function changeYear() {
     var selYear = $("#yearRange").val();
-    $("#selectedYear").text();
+    $("#selectedYear").text(selYear);
     getGdpInfoByYear(selYear);
 }
 function startAnimation() {
@@ -203,15 +203,15 @@ function renderCountries() {
             var countryCode = feature.properties.iso_a3;
             var selectedBorder = 3;
             function countryBorderWidth() {
-                return allowedCountries[countryCode] ? selectedBorder : 1;
+                return selectedCountries[countryCode] ? selectedBorder : 1;
             }
 
             function countryBorderColor() {
-                return allowedCountries[countryCode] ? '#ff0' : '#fff';
+                return selectedCountries[countryCode] ? '#ff0' : '#fff';
             }
 
             layer.on('click', function () {
-                allowedCountries[countryCode] = !allowedCountries[countryCode];
+                selectedCountries[countryCode] = !selectedCountries[countryCode];
                 layer.setStyle({
                     weight: countryBorderWidth(),
                     color: countryBorderColor()
@@ -280,9 +280,9 @@ function addControls() {
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'infoLeft mapLegend');
         var labels = [];        
-        labels.push('<div class="slidecontainer"><table><tr><td><h4>Click on a tick to select a year [1980-2017]: <span id="selectedYear">2017</span></h4></td>' +
-            '<td class="righAlign"><button type="button" class="btn btn-success" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button>'
-            + ' <button type="button" class="btn btn-primary" id="compare"> <span class="glyphicon glyphicon-signal"></span> Compare selected countries</button></td></tr></table><br/>'
+        labels.push('<div class="slidecontainer"><table width="100%"><tr><td><h4>Click on a tick to select a year [1980-2017]: <span id="selectedYear">2017</span></h4></td>' +
+            '<td><button type="button" class="btn btn-primary righAlign" id="compare"> <span class="glyphicon glyphicon-signal"></span> Compare selected countries</button>'
+            + '<button type="button" class="btn btn-primary righAlign" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button></td></tr></table><br/>'
             + '<input type="range" min="1980" max="2017" value="2017" step="1" class="slider" id="yearRange">');
         labels.push('<div class="sliderticks">');
         for (var i = 1980; i < 2018; i++)
