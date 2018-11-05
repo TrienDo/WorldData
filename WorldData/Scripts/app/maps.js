@@ -1,6 +1,8 @@
 ﻿var allowedCountries = {};
 var countryGdpHash = {};
 var map;
+var jsonCountries;
+var countriesFeatureLayer;
 var info;
 var intervalId = null;
 var interverPeriod = 2000;//2 seconds
@@ -8,6 +10,7 @@ var curYear = 2017;
 
 $(function () {
     map = L.map('map');
+    renderMap();
     getGdpInfoByYear(2017);
     addInfo();
     addLegend();
@@ -21,7 +24,16 @@ $(function () {
             startAnimation()
         else
             stopAnimation();
-    });   
+    });
+
+    $("#compare").click(function () {
+        var selContries = [];
+        Object.keys(allowedCountries).forEach(function (key) {
+            if (allowedCountries[key])
+                selContries.push(key);
+        });
+        alert(selContries.join(','));
+    });
 });
 
 function changeYear() {
@@ -34,7 +46,7 @@ function startAnimation() {
     curYear = 1980;
     intervalId = setInterval(function () {
             $("#yearRange").val(curYear);
-            changeYear()
+            changeYear();
             curYear++;
             if (curYear == 2018)
                 curYear = 1980;
@@ -43,7 +55,7 @@ function startAnimation() {
     );    
 }
 function stopAnimation() {
-    $("#animation").html('<span class="glyphicon glyphicon-play"></span> lay animation through years');
+    $("#animation").html('<span class="glyphicon glyphicon-play"></span> Play animation through years');
     clearInterval(intervalId);
 }
 
@@ -77,7 +89,7 @@ function parseGdpInfo(data) {
         if (country.countryiso3code != "")
             countryGdpHash[country.countryiso3code] = country.value;
     }
-    renderMap();    
+    renderCountries();
 }
 
 function renderMap() {
@@ -91,55 +103,61 @@ function renderMap() {
             id: 'mapbox.streets'
         }).addTo(map);
         map.fitBounds([[70, -180], [-60, 195]]);
-
-        L.geoJson(json, {
-            clickable: true,
-            style: function (item) {
-                var cColor = getColorForGdp(countryGdpHash[item.properties.iso_a3]);
-                return {
-                    fillColor: cColor,
-                    fillOpacity: 0.7,
-                    fill: true,
-                    color: '#fff',
-                    weight: 1
-                }
-            },           
-            onEachFeature: function (feature, layer) {
-                var name = feature.properties.name;
-                var selectedBorder = 3;
-                function countryBorder() {
-                    return allowedCountries[name] ? selectedBorder : 1;
-                }
-                
-                //layer.bindPopup(name);
-
-                layer.on('click', function () {
-                    allowedCountries[name] = !allowedCountries[name];
-                    layer.setStyle({
-                        weight: countryBorder()
-                    });
-                });
-
-                layer.on('mouseover', function (e) {                    
-                    layer.setStyle({
-                        weight: selectedBorder
-                    });
-                    var gdp = countryGdpHash[feature.properties.iso_a3];
-                    info.update(name + ": " + (gdp == undefined ? "N/A" : Math.round(gdp)));
-                    //layer.openPopup(e.latlng);
-                })
-
-                layer.on('mouseout', function () {
-                    //layer.closePopup();
-                    info.update();
-                    layer.setStyle({
-                        weight: countryBorder()
-                    })
-                })
-            }
-        }).addTo(map);
-
+        jsonCountries = json;
     });
+}
+
+function renderCountries() {
+    if (countriesFeatureLayer != undefined)
+        countriesFeatureLayer.clearLayers();
+    countriesFeatureLayer = L.geoJson(jsonCountries, {
+        clickable: true,
+        style: function (item) {
+            var cColor = getColorForGdp(countryGdpHash[item.properties.iso_a3]);
+            return {
+                fillColor: cColor,
+                fillOpacity: 0.7,
+                fill: true,
+                color: '#fff',
+                weight: 1
+            }
+        },
+        onEachFeature: function (feature, layer) {
+            var countryCode = feature.properties.iso_a3;
+            var selectedBorder = 3;
+            function countryBorderWidth() {
+                return allowedCountries[countryCode] ? selectedBorder : 1;
+            }
+
+            function countryBorderColor() {
+                return allowedCountries[countryCode] ? '#ff0' : '#fff';
+            }
+
+            layer.on('click', function () {
+                allowedCountries[countryCode] = !allowedCountries[countryCode];
+                layer.setStyle({
+                    weight: countryBorderWidth(),
+                    color: countryBorderColor()
+                });
+            });
+
+            layer.on('mouseover', function (e) {
+                layer.setStyle({
+                    weight: selectedBorder
+                });
+                var gdp = countryGdpHash[feature.properties.iso_a3];
+                info.update(feature.properties.name + ": " + (gdp == undefined ? "N/A" : Math.round(gdp)));
+            })
+
+            layer.on('mouseout', function () {
+                info.update();
+                layer.setStyle({
+                    weight: countryBorderWidth()
+                })
+            })
+        }
+    });
+    countriesFeatureLayer.addTo(map);
 }
 
 function addInfo() {
@@ -186,7 +204,8 @@ function addControls() {
         var div = L.DomUtil.create('div', 'infoLeft legend');
         var labels = [];        
         labels.push('<div class="slidecontainer"><table><tr><td><h4>Click on a tick to select a year [1980-2017]: <span id="selectedYear">2017</span></h4></td>' +
-            '<td class="righAlign"><button type="button" class="btn btn-success" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button></td></tr></table><br/>'
+            '<td class="righAlign"><button type="button" class="btn btn-success" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button>'
+            + ' <button type="button" class="btn btn-primary" id="compare"> <span class="glyphicon glyphicon-signal"></span> Compare selected countries</button></td></tr></table><br/>'
             + '<input type="range" min="1980" max="2017" value="2017" step="1" class="slider" id="yearRange">');
         labels.push('<div class="sliderticks">');
         for (var i = 1980; i < 2018; i++)
