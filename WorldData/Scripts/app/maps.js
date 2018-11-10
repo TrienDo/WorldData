@@ -34,9 +34,59 @@ $(function () {
 
     //Compare GDP of selected countries
     $("#compare").click(function () {
-        getGdpForSelectedCountries();        
+        //Get selected country codes
+        var selCountries = [];
+        Object.keys(selectedCountries).forEach(function (key) {
+            if (selectedCountries[key])
+                selCountries.push(key);
+        });
+        if (selCountries.length <= 10 && selCountries.length > 0)
+            getGdpForSelectedCountries(selCountries);
+        else
+            alert("You should select between [1-10] countries on the map");
+    });
+
+    //Compare GDP of k neareast countries
+    $("#knearest").click(function () {
+        //Get selected country codes
+        var selCountries = [];
+        Object.keys(selectedCountries).forEach(function (key) {
+            if (selectedCountries[key])
+                selCountries.push(key);
+        });
+        if (selCountries.length == 1) {
+            var knearest = getKNearestCountries(5, selCountries[0]);
+            getGdpForSelectedCountries(knearest);
+        }
+        else
+            alert("You should select only one country on the map");
     });
 });
+
+//Get k nearest countries of a country
+function getKNearestCountries(k, countryCode) {
+    var gdp = countryGdpHash[countryCode];
+    if(gdp == undefined)
+        alert("The selected country has no GDP PC info!");
+    var knearest = [];
+    knearest.push({'code':countryCode,'gdp': Number.MAX_VALUE});//This value will be removed later    
+    Object.keys(countryGdpHash).forEach(function (key) {
+        if(countryGdpHash[key] == undefined)
+            return;
+        var curDis = Math.abs(countryGdpHash[key] - gdp) ;
+        var maxDis = Math.abs(knearest[knearest.length - 1].gdp - gdp);
+        if (curDis < maxDis) {//Closer than the largest
+            if (knearest.length == k)//Full of k nearest -> remove the last to add the new one
+                knearest.pop();
+            knearest.push({ 'code': key, 'gdp': countryGdpHash[key] });
+            //knearest quite small so just sort it;
+            knearest.sort((a,b)=>(Math.abs(a.gdp - gdp) > Math.abs(b.gdp - gdp)) ? 1 : (Math.abs(b.gdp-gdp) > Math.abs(a.gdp-gdp) ? -1 : 0));
+        }
+    });
+    var output = [];
+    knearest.forEach(n => output.push(n.code));
+    return output;
+}
 
 //When the user select a year -> Update map
 function changeYear() {
@@ -46,7 +96,7 @@ function changeYear() {
 }
 
 function startAnimation() {
-    $("#animation").html('<span class="glyphicon glyphicon-stop"></span> Stop animation through years');
+    $("#animation").html('<span class="glyphicon glyphicon-stop"></span> Stop animation');
     animatedYear = startYear;
     intervalId = setInterval(function () {
             $("#yearRange").val(animatedYear);
@@ -60,20 +110,14 @@ function startAnimation() {
 }
 
 function stopAnimation() {
-    $("#animation").html('<span class="glyphicon glyphicon-play"></span> Play animation through years');
+    $("#animation").html('<span class="glyphicon glyphicon-play"></span> Play animation');
     clearInterval(intervalId);
 }
 
-function getGdpForSelectedCountries() {
-    //Get selected country codes
-    var selCountries = [];
-    Object.keys(selectedCountries).forEach(function (key) {
-        if (selectedCountries[key])
-            selCountries.push(key);
-    });
+function getGdpForSelectedCountries(selectedCountries) {
     //Call api from controller
     var data = new FormData();
-    data.append("countryList", selCountries.join(';'));
+    data.append("countryList", selectedCountries.join(';'));
     $.ajax({
         type: "POST",
         url: "/Home/getGdpForCountries",
@@ -307,9 +351,11 @@ function addControls() {
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'infoLeft mapLegend');
         var labels = [];        
-        labels.push('<div class="slidecontainer"><table width="100%"><tr><td><h4>Click on a tick to select a year [' + startYear + '-' + (curYear - 1) + ']: <span id="selectedYear">' + (curYear - 1) + '</span></h4></td>' +
-            '<td><button type="button" class="btn btn-primary righAlign" id="compare"> <span class="glyphicon glyphicon-signal"></span> Compare selected countries</button>'
-            + '<button type="button" class="btn btn-primary righAlign" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation through years</button></td></tr></table><br/>'
+        labels.push('<div class="slidecontainer"><table width="100%"><tr><td><h4>Selected year [' + startYear + '-' + (curYear - 1) + ']: <span id="selectedYear">' + (curYear - 1) + '</span></h4></td>' +
+            '<td><button type="button" class="btn btn-primary righAlign" id="compare"> <span class="glyphicon glyphicon-signal"></span> Compare countries</button>'
+            + '<button type="button" class="btn btn-primary righAlign" id="cluster"> <span class="glyphicon glyphicon-globe"></span> Cluster countries</button>'
+            + '<button type="button" class="btn btn-primary righAlign" id="knearest"> <span class="glyphicon glyphicon-screenshot"></span> K-nearest countries</button>'
+            + '<button type="button" class="btn btn-primary righAlign" id="animation"> <span class="glyphicon glyphicon-play"></span> Play animation</button></td></tr></table><br/>'
             + '<input type="range" min="' + startYear + '" max="' + (curYear - 1) + '" value="' + (curYear - 1) + '" step="1" class="slider" id="yearRange">');
         labels.push('<div class="sliderticks">');
         for (var i = startYear; i < curYear; i++)
